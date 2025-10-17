@@ -1,0 +1,237 @@
+﻿@using Weather1.Models
+@{
+    ViewData["Title"] = "Данные на сегодня";
+}
+
+<!-- ✅ ОБЁРТКА С ФОНОМ -->
+<div class="main-sections" style="padding: 20px; border-radius: 8px;">
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+        <!-- Блок прогноза -->
+        <div style="padding: 20px; border: 1px solid #ccc; background: #f3f3f3;">
+            <h4>Прогноз на сегодня</h4>
+            <div class="mb-3">
+                <label><strong>Город:</strong></label>
+                <select id="citySelect" class="form-select">
+                    <option value="">Все города</option>
+                    <option>Москва</option>
+                    <option>Санкт-Петербург</option>
+                    <option>Новосибирск</option>
+                    <option>Екатеринбург</option>
+                    <option>Казань</option>
+                    <option>Нижний Новгород</option>
+                    <option>Челябинск</option>
+                    <option>Самара</option>
+                    <option>Уфа</option>
+                    <option>Ростов-на-Дону</option>
+                </select>
+            </div>
+            <button class="btn btn-primary mb-3" onclick="loadTodayForecast()">Показать прогноз</button>
+            <div id="todayForecast">
+                @await Html.PartialAsync("_TodayForecast", ViewBag.Latest as Observation)
+            </div>
+        </div>
+
+        <!-- Блок графиков -->
+        <div style="padding: 20px; border: 1px solid #ccc; background: #f3f3f3;">
+            <h4>Графики</h4>
+            <div style="margin-bottom: 10px;">
+                <label>промежуток с: </label>
+                <input id="from" type="datetime-local" />
+                <input id="to" type="datetime-local" />
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label>Город: </label>
+                <select id="cityFilter" class="form-select">
+                    <option value="">Все города</option>
+                    <option>Москва</option>
+                    <option>Санкт-Петербург</option>
+                    <option>Новосибирск</option>
+                    <option>Екатеринбург</option>
+                    <option>Казань</option>
+                    <option>Нижний Новгород</option>
+                    <option>Челябинск</option>
+                    <option>Самара</option>
+                    <option>Уфа</option>
+                    <option>Ростов-на-Дону</option>
+                </select>
+            </div>
+            <button id="btnLoad" class="btn btn-primary">загрузить</button>
+            <div style="margin-bottom: 20px; padding: 15px; background: #fff;">
+                график температуры
+                <canvas id="tempChart" height="150"></canvas>
+            </div>
+            <div style="padding: 15px; background: #fff;">
+                график влажности
+                <canvas id="humChart" height="150"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // ====== Сохранение выбора города прогноза ======
+        function loadTodayForecast() {
+            const city = document.getElementById("citySelect").value;
+            localStorage.setItem("selectedCityForecast", city);
+            const q = city ? `?city=${encodeURIComponent(city)}` : "";
+            fetch(`/Observations/TodayByCity${q}`)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById("todayForecast").innerHTML = html;
+                });
+        }
+
+        function restoreForecastSelection() {
+            const savedCity = localStorage.getItem("selectedCityForecast");
+            if (savedCity) {
+                document.getElementById("citySelect").value = savedCity;
+                loadTodayForecast();
+            }
+        }
+
+        function saveChartFilters() {
+            localStorage.setItem("chartFrom", document.getElementById("from").value);
+            localStorage.setItem("chartTo", document.getElementById("to").value);
+            localStorage.setItem("chartCity", document.getElementById("cityFilter").value);
+        }
+
+        function restoreChartFilters() {
+            const from = localStorage.getItem("chartFrom");
+            const to = localStorage.getItem("chartTo");
+            const city = localStorage.getItem("chartCity");
+
+            if (from) document.getElementById("from").value = from;
+            if (to) document.getElementById("to").value = to;
+            if (city) document.getElementById("cityFilter").value = city;
+        }
+
+        function loadCharts() {
+            saveChartFilters();
+            const fromVal = document.getElementById('from').value;
+            const toVal = document.getElementById('to').value;
+            const city = document.getElementById('cityFilter').value;
+
+            let from = fromVal ? new Date(fromVal).toISOString() : null;
+            let to = toVal ? new Date(toVal).toISOString() : null;
+
+            let params = new URLSearchParams();
+            if (from) params.append('from', from);
+            if (to) params.append('to', to);
+            if (city) params.append('city', city);
+
+            let tempUrl = '/Observations/TemperatureData';
+            let humUrl = '/Observations/HumidityData';
+
+            if ([...params].length > 0) {
+                tempUrl += '?' + params.toString();
+                humUrl += '?' + params.toString();
+            }
+
+            fetch(tempUrl).then(r => r.json()).then(data => {
+                const labels = data.map(d => d.timestamp);
+                const values = data.map(d => d.temperature);
+                renderTempChart(labels, values);
+            });
+
+            fetch(humUrl).then(r => r.json()).then(data => {
+                const labels = data.map(d => d.timestamp);
+                const values = data.map(d => d.humidity);
+                renderHumChart(labels, values);
+            });
+        }
+
+        var tempChart, humChart;
+
+                function renderTempChart(labels, data) {
+            const ctx = document.getElementById('tempChart').getContext('2d');
+            if (tempChart) tempChart.destroy();
+            tempChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Температура (°C)',
+                        data,
+                        tension: 0.3,
+                        fill: false,
+                        borderColor: '#51D8DD', // линия
+                        backgroundColor: '#51D8DD'
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white',
+                                font: { size: 14 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' }
+                        },
+                        y: {
+                            ticks: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHumChart(labels, data) {
+            const ctx = document.getElementById('humChart').getContext('2d');
+            if (humChart) humChart.destroy();
+            humChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Влажность (%)',
+                        data,
+                        backgroundColor: '#51D8DD'
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white',
+                                font: { size: 14 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'white' }
+                        },
+                        y: {
+                            ticks: { color: 'white' }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('btnLoad').addEventListener('click', loadCharts);
+
+        (function initDefaults() {
+            restoreForecastSelection();
+            restoreChartFilters();
+
+            if (!localStorage.getItem("chartFrom")) {
+                const now = new Date();
+                const start = new Date();
+                start.setHours(0, 0, 0, 0);
+                document.getElementById('from').value = start.toISOString().slice(0, 16);
+                document.getElementById('to').value = now.toISOString().slice(0, 16);
+            }
+            loadCharts();
+        })();
+    </script>
+}

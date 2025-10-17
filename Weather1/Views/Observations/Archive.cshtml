@@ -1,0 +1,168 @@
+﻿@model IEnumerable<Weather1.Models.Observation>
+@using System.Linq
+@{
+    ViewData["Title"] = "Архив наблюдений";
+
+    // Значения, которые пришли с фильтра (GET параметры)
+    var selectedCity = Context.Request.Query["city"].ToString();
+    var startDate = Context.Request.Query["startDate"].ToString();
+    var endDate = Context.Request.Query["endDate"].ToString();
+
+    var cities = new List<string>
+    {
+        "Москва", "Санкт-Петербург", "Новосибирск", "Екатеринбург",
+        "Казань", "Нижний Новгород", "Челябинск",
+        "Самара", "Уфа", "Ростов-на-Дону"
+    };
+
+    // Собираем опции выпадающего списка
+    var sb = new System.Text.StringBuilder();
+    sb.Append("<option value=\"\"" + (string.IsNullOrEmpty(selectedCity) ? " selected" : "") + ">Все города</option>");
+    foreach (var city in cities)
+    {
+        sb.Append("<option value=\"" + System.Net.WebUtility.HtmlEncode(city) + "\"" +
+                  (selectedCity == city ? " selected" : "") + ">" +
+                  System.Net.WebUtility.HtmlEncode(city) + "</option>");
+    }
+    var optionsHtml = sb.ToString();
+
+    // ====== Расчёт средних значений (без ошибок конвертации) ======
+    double? avgTemp = null;
+    double? avgHumidity = null;
+    double? avgPrecipitation = null;
+    double? avgWind = null;
+
+    var modelList = Model?.ToList() ?? new List<Weather1.Models.Observation>();
+
+    if (modelList.Any())
+    {
+        // Температура (в модели double) — безопасно
+        avgTemp = modelList.Average(m => (double?)m.Temperature);
+
+        // Влажность (в модели int) — приводим к double?
+        avgHumidity = modelList.Average(m => (double?)m.Humidity);
+
+        // Ветер (double) — безопасно
+        avgWind = modelList.Average(m => (double?)m.WindSpeed);
+
+        // Осадки: в модели это string. Попробуем распарсить числовые значения и усреднить только их.
+        var precipValues = modelList
+            .Select(m =>
+            {
+                if (string.IsNullOrWhiteSpace(m.Precipitation)) return (double?)null;
+                // Убираем возможные пробелы и заменяем запятую на точку
+                var s = m.Precipitation.Trim().Replace(',', '.');
+                if (double.TryParse(s, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var v))
+                    return (double?)v;
+                return (double?)null;
+            })
+            .Where(v => v.HasValue)
+            .Select(v => v.Value)
+            .ToList();
+
+        if (precipValues.Any())
+        {
+            avgPrecipitation = precipValues.Average();
+        }
+        else
+        {
+            avgPrecipitation = null;
+        }
+    }
+}
+<h2>Архив наблюдений</h2>
+
+<form method="get" asp-action="Archive" class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <label class="form-label">Город</label>
+        <select name="city" class="form-select">
+            @Html.Raw(optionsHtml)
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Дата с</label>
+        <input type="date" name="startDate" class="form-control" value="@startDate" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Дата по</label>
+        <input type="date" name="endDate" class="form-control" value="@endDate" />
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-primary w-50">Фильтровать</button>
+        <a href="@Url.Action("Archive")" class="btn btn-outline-secondary w-50">Сбросить</a>
+    </div>
+</form>
+
+<!-- Блок со средними значениями (появляется только если есть данные) -->
+@if (modelList.Any())
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Средние значения по текущему фильтру</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>Температура:</strong>
+                    @(avgTemp.HasValue ? avgTemp.Value.ToString("0.0") + " °C" : "—")
+                </div>
+
+                <div class="col-md-3">
+                    <strong>Влажность:</strong>
+                    @(avgHumidity.HasValue ? avgHumidity.Value.ToString("0.0") + " %" : "—")
+                </div>
+
+                <div class="col-md-3">
+                    <strong>Осадки:</strong>
+                    @(avgPrecipitation.HasValue ? avgPrecipitation.Value.ToString("0.0") : "—")
+                </div>
+
+                <div class="col-md-3">
+                    <strong>Ветер:</strong>
+                    @(avgWind.HasValue ? avgWind.Value.ToString("0.0") + " м/с" : "—")
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="mb-4 text-muted">Нет наблюдений для выбранного фильтра.</div>
+}
+
+@* <p>
+    <a class="btn btn-secondary" asp-action="Index">Назад к сегодняшним</a>
+</p> *@
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Время</th>
+            <th>Город</th>
+            <th>Температура °C</th>
+            <th>Влажность %</th>
+            <th>Осадки</th>
+            <th>Ветер (м/с)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in modelList)
+        {
+            <tr>
+                <td>@item.Timestamp.ToString("g")</td>
+                <td>@item.City</td>
+                <td>@item.Temperature</td>
+                <td>@item.Humidity</td>
+                <td>@item.Precipitation</td>
+                <td>@item.WindSpeed</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Изменить</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

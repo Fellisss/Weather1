@@ -1,0 +1,151 @@
+﻿/* ✅ Шрифт Montserrat */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+html, body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #0D1A2B !important;
+    color: #FFFFFF !important;
+    margin: 0;
+    padding: 0;
+}
+
+/* ✅ Верхнее меню */
+header nav, .navbar, .navbar-light, .border-bottom {
+    background-color: #15263A !important;
+    border: none !important;
+}
+
+    .navbar .btn {
+        background-color: #51D8DD !important;
+        border: none !important;
+        color: #000000 !important;
+        font-weight: 500;
+    }
+
+        .navbar .btn.btn-secondary {
+            background-color: transparent !important;
+            border: 1px solid white !important;
+            color: white !important;
+        }
+
+/* ✅ Карточки (блоки прогноз и графики) */
+div[style*="padding: 20px"][style*="background"],
+.card, .content-block, .forecast-block, .charts-block {
+    background-color: #15263A !important;
+    border-radius: 10px !important;
+    border: none !important;
+    color: white !important;
+}
+
+/* ✅ Текст */
+h1, h2, h3, h4, h5, label, p, span {
+    color: white !important;
+}
+
+/* ✅ Поля ввода */
+input, select, textarea, .form-control, .form-select {
+    background-color: #24364D !important;
+    color: white !important;
+    border: 1px solid #3D536D !important;
+}
+
+/* ✅ Кнопки */
+.btn-primary {
+    background-color: #51D8DD !important;
+    border: none !important;
+    color: black !important;
+    font-weight: 500;
+}
+
+.btn-success {
+    background-color: #51D8DD !important;
+    color: black !important;
+    border: none !important;
+}
+
+.btn-danger {
+    background-color: transparent !important;
+    color: white !important;
+    border: 1px solid white !important;
+}
+
+.btn-secondary,
+.btn-cancel,
+.btn-back {
+    background-color: transparent !important;
+    color: white !important;
+    border: 1px solid white !important;
+}
+
+/* ✅ Графики (С мягкой подсветкой вместо белой рамки) */
+canvas {
+    background-color: #24364D !important;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.08); /* ✅ эффект подсветки */
+}
+
+/* ✅ Футер */
+footer {
+    background-color: #15263A !important;
+    color: white !important;
+    border: none !important;
+}
+
+footer {
+    position: static !important;
+    margin-top: 30px;
+    padding: 10px 0;
+    text-align: center;
+}
+
+/* ✅ Отступы для кнопок */
+.btn {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* ✅ Если кнопки рядом — расстояние между ними */
+button,
+a.btn {
+    margin-right: 10px;
+}
+
+/* ✅ Таблица — белый текст */
+table,
+table td,
+table th {
+    color: #ffffff !important;
+}
+
+
+/* Удаляем белую обводку и фон у контейнеров графиков */
+canvas,
+div[style*="background: #fff"],
+div[style*="background-color: #fff"],
+div[style*="padding: 15px"],
+.chart-container {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* ✅ Добавляем эффект мягкого свечения */
+.canvas-wrapper,
+div[style*="padding: 15px"] {
+    background-color: rgba(255, 255, 255, 0.03) !important; /* лёгкий темный фон */
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important; /* свечение */
+    padding: 15px !important;
+}
+
+/* Фон для главного блока с прогнозом и графиками */
+/*.main-sections {
+    background-color: #0D1A2B;
+}*/
+/*html, body {
+    background-color: #0D1A2B !important;
+}*/
+/*navbar, header, .navbar-brand {
+    background-color: #15263A !important;
+    color: #FFFFFF !important;
+}*/
