@@ -12,7 +12,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 // Регистрация DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

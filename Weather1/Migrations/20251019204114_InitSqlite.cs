@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Weather1.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitSqlite : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,14 +15,14 @@ namespace Weather1.Migrations
                 name: "Observations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Precipitation = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Temperature = table.Column<double>(type: "float", nullable: false),
-                    Humidity = table.Column<int>(type: "int", nullable: false),
-                    WindSpeed = table.Column<double>(type: "float", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    City = table.Column<string>(type: "TEXT", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Precipitation = table.Column<string>(type: "TEXT", nullable: false),
+                    Temperature = table.Column<double>(type: "REAL", nullable: false),
+                    Humidity = table.Column<int>(type: "INTEGER", nullable: false),
+                    WindSpeed = table.Column<double>(type: "REAL", nullable: false)
                 },
                 constraints: table =>
                 {
